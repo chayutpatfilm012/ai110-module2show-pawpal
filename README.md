@@ -46,7 +46,7 @@ pip install -r requirements.txt
 
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
 
-Output of `python main.py`:
+Output of `python main.py` (recurring task dates depend on the day you run it; this run was on 2026-10-27):
 
 ```text
 ==================================================
@@ -62,6 +62,79 @@ Total scheduled: 60 of 60 minutes
 
 Skipped tasks:
   - Mia: Groom (15 min, low) -> not enough time left
+
+==================================================
+Sorting by Time
+==================================================
+
+Today's plan in clock order:
+  07:00    Rex   Walk    (high, to do)
+  08:00    Mia   Feed    (high, to do)
+  17:30    Rex   Play    (medium, to do)
+
+All tasks in clock order:
+  07:00    Rex   Walk    (high, to do)
+  08:00    Mia   Feed    (high, to do)
+  17:30    Rex   Play    (medium, to do)
+  anytime  Mia   Groom   (low, to do)
+
+==================================================
+Filtering Tasks (after marking Mia's Feed as done)
+==================================================
+
+Rex's tasks:
+  07:00    Rex   Walk    (high, to do)
+  17:30    Rex   Play    (medium, to do)
+
+Tasks still to do:
+  07:00    Rex   Walk    (high, to do)
+  17:30    Rex   Play    (medium, to do)
+  anytime  Mia   Groom   (low, to do)
+
+Mia's completed tasks:
+  08:00    Mia   Feed    (high, done)
+
+Tasks for a pet named Buddy:
+  (no matching tasks)
+
+==================================================
+Recurring Tasks Demo
+==================================================
+  Completed 'Walk' due 2026-10-27 (daily) -> next one due 2026-10-28
+  Completed 'Bath' due 2026-10-27 (weekly) -> next one due 2026-11-03
+  Completed 'Vet visit' (once) -> no new task created
+
+Completing the same Walk again:
+  Walk was already done -> no duplicate task created
+
+Rex's task history:
+  2026-10-27  Walk      daily   done
+  2026-10-27  Play      daily   to do
+  2026-10-27  Bath      weekly  done
+  2026-10-28  Walk      daily   to do
+  2026-11-03  Bath      weekly  to do
+
+Mia's task history:
+  2026-10-27  Feed      daily   done
+  2026-10-27  Groom     daily   to do
+  2026-10-27  Vet visit once    done
+
+Plan for tomorrow (2026-10-28):
+  Rex: Walk (30 min, due 2026-10-28)
+  Rex: Play (20 min, due 2026-10-27)
+  skipped Mia: Groom -> not enough time left
+
+==================================================
+Conflict Detection Demo
+==================================================
+
+Example tasks:
+  08:00    Rex   Walk    (high, to do)
+  08:15    Mia   Feed    (high, to do)
+  08:30    Mia   Groom   (low, to do)
+
+1 conflict(s) found:
+  WARNING: Walk (Rex) 08:00-08:30 overlaps with Feed (Mia) 08:15-08:25.
 ```
 
 ## 🧪 Testing PawPal+
@@ -82,14 +155,62 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+The core plan comes from `Scheduler.generate_schedule()`. It goes through tasks from **high → medium → low** priority (shorter tasks first when priorities are equal) and adds each one that still fits in the owner's available time. Four extra features build on top of it.
 
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()` | Clock order by `"HH:MM"` start time; untimed tasks last |
+| Filtering | `Scheduler.filter_tasks()` | By pet name, completion status, or both |
+| Conflict handling | `Scheduler.detect_conflicts()`, `Scheduler.format_conflict()` | Finds overlapping time slots and prints warnings |
+| Recurring tasks | `Task.next_occurrence()`, `Pet.complete_task()` | `once`, `daily`, or `weekly`; next copy created on completion |
+
+### 1. Sorting by Time
+
+`Scheduler.sort_by_time(tasks=None)` returns tasks in clock order, earliest first.
+
+- Each task can have an optional `start_time` in 24-hour `"HH:MM"` format, such as `"08:30"` or `"14:00"`.
+- Tasks without a start time can happen at any time, so they appear **last**.
+- With no argument it sorts today's `daily_plan`; you can also pass in any list of tasks. The original list is not changed.
+- Sorting by time only changes the **display order**. *Which* tasks make it into the plan is still decided by priority.
+
+### 2. Filtering Tasks
+
+`Scheduler.filter_tasks(pet_name=None, completed=None)` returns only the tasks you ask for.
+
+- `filter_tasks(pet_name="Rex")` → only Rex's tasks.
+- `filter_tasks(completed=False)` → only tasks that still need doing.
+- Both filters can be **combined**: `filter_tasks(pet_name="Rex", completed=False)` → Rex's unfinished tasks.
+- Leaving an argument as `None` means "don't filter on this". No arguments returns every task; no matches returns an empty list.
+
+### 3. Conflict Detection
+
+`Scheduler.detect_conflicts(tasks=None)` finds tasks whose time ranges overlap, and `Scheduler.format_conflict()` turns each one into a readable warning:
+
+```text
+WARNING: Walk (Rex) 08:00-08:30 overlaps with Feed (Mia) 08:15-08:25.
+```
+
+- Each task's time range is its start time to start time + duration.
+- Every pair of timed tasks is compared (using `itertools.combinations`). Two tasks overlap when **each one starts before the other ends**.
+- Tasks that only touch, like one ending at 08:30 and the next starting at 08:30, are **not** a conflict.
+- Conflicts are checked across all pets, because one owner can't do two things at once. Tasks without a start time are ignored.
+- Conflicts only produce **warnings**. Tasks are never removed or rescheduled automatically; the owner decides what to change.
+
+### 4. Recurring Tasks
+
+Each task has a `frequency` and a `due_date` (today by default):
+
+| Frequency | What happens when it's completed |
+|-----------|----------------------------------|
+| `once` | Nothing else is created |
+| `daily` | A new copy is due **1 day** later |
+| `weekly` | A new copy is due **7 days** later |
+
+- `Task.next_occurrence()` builds the next copy, with the same details, `completed=False`, and the new due date. It does not change the original task.
+- `Pet.complete_task(task)` marks the task done and adds its next occurrence to the pet's task list.
+- The completed task **stays in the list as history**, so you can see what was done.
+- Calling `complete_task()` on a task that is already completed does nothing, so **duplicate occurrences are prevented**.
+- `generate_schedule(for_date=None)` only plans tasks that are due on or before the chosen day (default: today). Future tasks and old completed tasks are left out, and overdue unfinished tasks are carried over.
 
 ## 📸 Demo Walkthrough
 
