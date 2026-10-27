@@ -12,13 +12,26 @@ The three core actions of the PawPal+ application are:
 
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+I designed the PawPal+ system using four main classes: Owner, Pet, Task, and Scheduler.
+
+- **Owner:** Stores the owner's information, available time, preferences, and pets.
+- **Pet:** Stores pet information and manages tasks related to each pet.
+- **Task:** Represents activities such as feeding, walking, and grooming. Each task has a duration, priority, and completion status.
+- **Scheduler:** Organizes tasks based on priority and available time to create a daily schedule.
+
+I chose these classes because each one has a clear responsibility. This makes the system easier to understand, maintain, and improve.
 
 **b. Design changes**
 
-- Did your design change during implementation?
-- If yes, describe at least one change and why you made it.
+After reviewing my design with AI, I made three improvements.
+
+First, I connected the Scheduler to the Owner so it can access available time and pet tasks without storing duplicate data.
+
+Second, I added pet_name to the Task class to identify which pet each task belongs to.
+
+Finally, I decided to keep priority as a string and use a priority mapping during scheduling to make sure tasks are sorted correctly.
+
+These changes make the design simpler and easier to maintain.
 
 ---
 
@@ -31,8 +44,13 @@ The three core actions of the PawPal+ application are:
 
 **b. Tradeoffs**
 
-- Describe one tradeoff your scheduler makes.
-- Why is that tradeoff reasonable for this scenario?
+For conflict detection, I originally used nested loops to compare every pair of scheduled tasks. After reviewing the algorithm with AI, I changed it to use itertools.combinations() because it makes the code shorter and easier to understand.
+
+Both approaches have O(n²) time complexity, but combinations() improves readability while keeping the same behavior. I also added a helper function, _time_range(), to avoid repeating time calculations.
+
+A sorting-based algorithm could be faster for larger schedules, but it would add complexity. Since PawPal+ only handles a small number of daily tasks, I decided to prioritize readability and correctness over performance. All 40 tests still passed after the change.
+
+To put O(n²) in perspective: checking every pair of n tasks takes n × (n − 1) ÷ 2 comparisons, so 10 tasks need only 45 comparisons and even 100 tasks need 4,950, which is still instant. The sorting-based version would sort tasks by start time and stop checking as soon as the next task starts after the current one ends. That is faster for very large lists, but it is easy to get wrong: comparing each task only with its neighbour misses cases like an 08:00–10:00 walk overlapping a 09:00 task when an 08:30 task sits between them. It would also return conflict pairs in clock order instead of list order, which would change my existing behavior and tests. The nested-loop and combinations() versions check every pair, so they are correct without any extra reasoning, and combinations() states that intent directly in one line.
 
 ---
 

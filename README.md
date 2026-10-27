@@ -141,16 +141,24 @@ Example tasks:
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
-pytest --cov
+python -m pytest --cov
 ```
 
-Sample test output:
+Sample test output (from `python -m pytest`):
 
-```
-# Paste your pytest output here
+```text
+============================= test session starts =============================
+platform win32 -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
+rootdir: C:\Users\USER\ai110-module2show-pawpal
+plugins: anyio-4.15.1
+collected 40 items
+
+tests\test_pawpal.py ........................................            [100%]
+
+============================= 40 passed in 0.04s ==============================
 ```
 
 ## 📐 Smarter Scheduling
