@@ -143,9 +143,23 @@ Example tasks:
 # Run the full test suite:
 python -m pytest
 
-# Run with coverage:
+# Run with coverage (needs the pytest-cov plugin: pip install pytest-cov):
 python -m pytest --cov
 ```
+
+Use `python -m pytest` rather than plain `pytest`: running it through `python -m` adds the project folder to Python's import path so the tests can import `pawpal_system`.
+
+### What the tests cover
+
+All tests are in `tests/test_pawpal.py` and use a fixed date, so results don't depend on the day you run them.
+
+- **Task management and input validation:** marking tasks complete, adding tasks to pets, updating only the fields you pass, and rejecting bad values (zero/negative durations, unknown priorities or frequencies, invalid `"HH:MM"` times, tasks that run past midnight, negative available time).
+- **Sorting by time and priority:** clock order with untimed tasks last, original order kept for identical times, and high → medium → low priority with shorter tasks first on ties.
+- **Filtering:** by pet name, by completion status, and both together, including no-match and no-filter cases.
+- **Scheduling within available time:** the plan never exceeds the owner's time, exact fits are accepted, oversized tasks are skipped while smaller ones still fit, and regenerating replaces the old plan.
+- **Daily and weekly recurring tasks:** next occurrences 1 or 7 days later, `once` tasks not repeating, completed tasks kept as history, future tasks left out, and overdue tasks carried over.
+- **Conflict detection and warnings:** overlapping and identical start times, touching endpoints not counted, conflicts across pets, multiple overlapping pairs, and the exact warning text (including a `24:00` end time).
+- **Edge cases:** empty schedules (no pets or no tasks), a pet with no tasks, zero available time, invalid inputs, and completing the same task twice without creating duplicates.
 
 Sample test output (from `python -m pytest`):
 
@@ -154,12 +168,19 @@ Sample test output (from `python -m pytest`):
 platform win32 -- Python 3.13.15, pytest-9.1.1, pluggy-1.6.0
 rootdir: C:\Users\USER\ai110-module2show-pawpal
 plugins: anyio-4.15.1
-collected 40 items
+collected 78 items
 
-tests\test_pawpal.py ........................................            [100%]
+tests\test_pawpal.py ................................................... [ 65%]
+...........................                                              [100%]
 
-============================= 40 passed in 0.04s ==============================
+============================= 78 passed in 0.06s ==============================
 ```
+
+### Confidence Level
+
+**Confidence Level: 4/5 stars (★★★★☆)**
+
+The 78 passing tests give strong confidence in the core scheduling logic: priorities, time limits, sorting, filtering, recurrence, and conflict detection are all checked, including the main edge cases. It is not 5/5 because the Streamlit interface in `app.py` is not covered by the pytest suite and has not been tested thoroughly in a real browser, and there is no performance testing with large numbers of pets and tasks.
 
 ## 📐 Smarter Scheduling
 
