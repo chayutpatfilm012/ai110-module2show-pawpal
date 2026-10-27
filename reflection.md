@@ -2,6 +2,14 @@
 
 ## 1. System Design
 
+The three core actions of the PawPal+ application are:
+
+1. **Add a Pet:** Users can add a new pet and store basic information such as its name, age, and type.
+
+2. **Schedule a Task:** Users can create tasks for their pets, such as feeding, walking, or grooming, and set a scheduled time.
+
+3. **View Daily Tasks:** Users can view all scheduled tasks for the day to help them manage their pets' daily activities.
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.

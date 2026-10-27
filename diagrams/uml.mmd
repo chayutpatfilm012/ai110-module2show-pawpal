@@ -26,16 +26,15 @@ classDiagram
         +int duration_minutes
         +str priority
         +bool completed
+        +str pet_name
         +update_task(title, duration_minutes, priority) None
         +mark_complete() None
         +get_details() str
     }
 
     class Scheduler {
-        +list~Task~ tasks
-        +int available_time
+        +Owner owner
         +list~Task~ daily_plan
-        +add_task(task) None
         +sort_by_priority() list~Task~
         +generate_schedule() list~Task~
         +explain_schedule() str
@@ -43,4 +42,7 @@ classDiagram
 
     Owner "1" --> "*" Pet : has
     Pet "1" --> "*" Task : has
-    Scheduler "1" --> "*" Task : organizes
+    Scheduler "1" --> "1" Owner : plans for
+    Scheduler "1" --> "*" Task : organizes into daily_plan
+
+    note for Task "priority is low, medium, or high.\nScheduler maps it to 1, 2, 3 when sorting."

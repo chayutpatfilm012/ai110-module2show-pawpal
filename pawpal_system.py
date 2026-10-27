@@ -10,8 +10,11 @@ class Task:
 
     title: str
     duration_minutes: int
-    priority: str = "medium"  # "low", "medium", or "high"
+    # "low", "medium", or "high". Strings don't sort in priority order
+    # alphabetically, so the Scheduler maps them to numbers when sorting.
+    priority: str = "medium"
     completed: bool = False
+    pet_name: str = ""  # which pet this task belongs to
 
     def update_task(
         self,
@@ -77,18 +80,20 @@ class Owner:
 
 @dataclass
 class Scheduler:
-    """Builds a daily plan of tasks that fits the available time."""
+    """Builds a daily plan of tasks that fits the owner's available time.
 
-    tasks: list[Task] = field(default_factory=list)
-    available_time: int = 0  # minutes per day
+    Tasks come from owner.pets and the time limit from owner.available_time.
+    """
+
+    owner: Owner
     daily_plan: list[Task] = field(default_factory=list)
 
-    def add_task(self, task: Task) -> None:
-        """Add a task to be considered for scheduling."""
-        pass
-
     def sort_by_priority(self) -> list[Task]:
-        """Return the tasks ordered from highest to lowest priority."""
+        """Return all of the owner's pets' tasks, highest priority first.
+
+        Priority strings are mapped to numbers for sorting:
+        {"low": 1, "medium": 2, "high": 3}.
+        """
         pass
 
     def generate_schedule(self) -> list[Task]:
