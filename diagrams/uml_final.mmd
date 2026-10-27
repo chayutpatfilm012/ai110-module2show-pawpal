@@ -1,0 +1,66 @@
+classDiagram
+    %% PawPal+ final class diagram — matches pawpal_system.py at the end of Phase 6.
+    %% The original working draft is kept in diagrams/uml.mmd.
+
+    class Owner {
+        +str name
+        +int available_time = 0
+        +dict preferences
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +set_available_time(minutes: int) None
+        +update_preferences(preferences: dict) None
+        +get_all_tasks() list~Task~
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +int age
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +complete_task(task: Task) Optional~Task~
+        +view_tasks() list~Task~
+        +get_info() str
+    }
+
+    class Task {
+        +str title
+        +int duration_minutes
+        +str priority = "medium"
+        +str frequency = "daily"
+        +bool completed = False
+        +str pet_name = ""
+        +str start_time = ""
+        +date due_date = today
+        +update_task(title: str, duration_minutes: int, priority: str, frequency: str, start_time: str) None
+        +mark_complete() None
+        +next_occurrence() Optional~Task~
+        +get_details() str
+    }
+
+    class Scheduler {
+        +Owner owner
+        +list~Task~ daily_plan
+        +list~Task~ skipped
+        +sort_by_priority() list~Task~
+        +sort_by_time(tasks: list~Task~ = None) list~Task~
+        +filter_tasks(pet_name: str = None, completed: bool = None) list~Task~
+        +generate_schedule(for_date: date = None) list~Task~
+        +detect_conflicts(tasks: list~Task~ = None) list~tuple~
+        +format_conflict(task_a: Task, task_b: Task) str
+        +get_skip_reason(task: Task) str
+        +explain_schedule() str
+    }
+
+    Owner "1" o-- "0..*" Pet : manages
+    Pet "1" o-- "0..*" Task : maintains
+    Scheduler "1" --> "1" Owner : uses to get tasks and time
+    Scheduler "1" --> "0..*" Task : daily_plan / skipped
+    Scheduler ..> Task : selects, sorts, filters, checks conflicts
+
+    note for Task "priority: low, medium, or high (mapped to 1, 2, 3 for sorting)\nfrequency: once, daily, or weekly\nstart_time: 24-hour HH:MM, or empty for any time; must end by 24:00\nupdate_task(): every argument is optional, leave it out to keep the value\nnext_occurrence(): None for once tasks, else a copy due 1 or 7 days later"
+
+    note for Pet "complete_task() marks the task done and adds its next occurrence.\nIt returns None for once tasks or tasks that are already completed."
+
+    note for Scheduler "generate_schedule() picks tasks by priority within owner.available_time.\nsort_by_time() and detect_conflicts() default to daily_plan.\ndetect_conflicts() returns (Task, Task) pairs as warnings only;\nit never removes or reschedules tasks."

@@ -42,6 +42,8 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+**UML diagrams:** the final architecture is in [diagrams/uml_final.mmd](diagrams/uml_final.mmd); the working diagram used during development is kept in [diagrams/uml.mmd](diagrams/uml.mmd).
+
 ## 🖥️ Sample Output
 
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
