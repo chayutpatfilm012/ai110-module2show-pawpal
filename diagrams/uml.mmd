@@ -9,6 +9,7 @@ classDiagram
         +add_pet(pet) None
         +set_available_time(minutes) None
         +update_preferences(preferences) None
+        +get_all_tasks() list~Task~
     }
 
     class Pet {
@@ -25,9 +26,10 @@ classDiagram
         +str title
         +int duration_minutes
         +str priority
+        +str frequency
         +bool completed
         +str pet_name
-        +update_task(title, duration_minutes, priority) None
+        +update_task(title, duration_minutes, priority, frequency) None
         +mark_complete() None
         +get_details() str
     }
@@ -35,6 +37,7 @@ classDiagram
     class Scheduler {
         +Owner owner
         +list~Task~ daily_plan
+        +list~Task~ skipped
         +sort_by_priority() list~Task~
         +generate_schedule() list~Task~
         +explain_schedule() str
@@ -43,6 +46,6 @@ classDiagram
     Owner "1" --> "*" Pet : has
     Pet "1" --> "*" Task : has
     Scheduler "1" --> "1" Owner : plans for
-    Scheduler "1" --> "*" Task : organizes into daily_plan
+    Scheduler "1" --> "*" Task : organizes into daily_plan / skipped
 
-    note for Task "priority is low, medium, or high.\nScheduler maps it to 1, 2, 3 when sorting."
+    note for Task "priority is low, medium, or high.\nScheduler maps it to 1, 2, 3 when sorting.\nfrequency is once, daily, or weekly."
